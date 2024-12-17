@@ -1,3 +1,6 @@
+let midiRecorder;
+let isRecording = false;
+
 //Hide or show control-panel
 function toggleControl(){
   let controlPanel = document.getElementsByClassName('control-panel')[0];
@@ -131,9 +134,37 @@ function handleError(error) {
 //send Midi notes out when "send Midi" box checked
 sendMidi.addEventListener("change", function(){
   if (this.checked) {
+    // Initialize the MIDI recorder
+    midiRecorder = new Tone.Recorder();
+    
+    // Connect the output to the recorder
+    // Assuming you want to record the MIDI output
+    // You might need to adjust this based on your exact MIDI setup
+    output.connect(midiRecorder);
+    
+    // Start Tone Transport and recording
     Tone.Transport.start();
+    midiRecorder.start();
+    isRecording = true;
   } else {
+    // Stop Tone Transport
     Tone.Transport.stop();
+    
+    // Stop and save the recording
+    if (midiRecorder && isRecording) {
+      setTimeout(async () => {
+        const recording = await midiRecorder.stop();
+        
+        // Create a download link for the recording
+        const url = URL.createObjectURL(recording);
+        const anchor = document.createElement("a");
+        anchor.download = "midi_recording_" + new Date().toISOString().replace(/:/g, '-') + ".webm";
+        anchor.href = url;
+        anchor.click();
+        
+        isRecording = false;
+      }, 500); // Small delay to ensure all sounds are captured
+    }
   }
 });
 
